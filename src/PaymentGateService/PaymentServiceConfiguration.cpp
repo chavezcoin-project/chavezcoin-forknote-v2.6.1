@@ -16,6 +16,7 @@
 // along with Bytecoin.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "PaymentServiceConfiguration.h"
+#include "CryptoNoteConfig.h"
 
 #include <iostream>
 #include <algorithm>

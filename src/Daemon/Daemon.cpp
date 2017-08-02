@@ -77,7 +77,162 @@ namespace
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
 void print_genesis_tx_hex(const po::variables_map& vm, LoggerManager& logManager) {
 
-  CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction();
+  CryptoNote::CurrencyBuilder currencyBuilder(logManager);
+
+  currencyBuilder.cryptonoteName(CryptoNote::CRYPTONOTE_NAME);
+  currencyBuilder.mandatoryTransaction(CryptoNote::parameters::MANDATORY_TRANSACTION);
+  currencyBuilder.genesisCoinbaseTxHex(CryptoNote::parameters::GENESIS_COINBASE_TX_HEX);
+  currencyBuilder.publicAddressBase58Prefix(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
+  currencyBuilder.moneySupply(CryptoNote::parameters::MONEY_SUPPLY);
+  currencyBuilder.emissionSpeedFactor(CryptoNote::parameters::EMISSION_SPEED_FACTOR);
+  currencyBuilder.blockGrantedFullRewardZone(CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
+  currencyBuilder.blockGrantedFullRewardZoneV1(CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1);
+  currencyBuilder.blockGrantedFullRewardZoneV2(CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2);
+  currencyBuilder.numberOfDecimalPlaces(CryptoNote::parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT);
+  currencyBuilder.mininumFee(CryptoNote::parameters::MINIMUM_FEE);
+  currencyBuilder.defaultDustThreshold(CryptoNote::parameters::DEFAULT_DUST_THRESHOLD);
+  currencyBuilder.difficultyTarget(CryptoNote::parameters::DIFFICULTY_TARGET);
+  currencyBuilder.minedMoneyUnlockWindow(CryptoNote::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW);
+  currencyBuilder.maxBlockSizeInitial(CryptoNote::parameters::MAX_BLOCK_SIZE_INITIAL);
+
+  if (CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY != 0)
+  {
+    currencyBuilder.expectedNumberOfBlocksPerDay(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+    currencyBuilder.difficultyWindow(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+    currencyBuilder.difficultyWindowV1(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+    currencyBuilder.difficultyWindowV2(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+    currencyBuilder.upgradeVotingWindow(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+    currencyBuilder.upgradeWindow(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+  } else {
+    currencyBuilder.expectedNumberOfBlocksPerDay(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+    currencyBuilder.difficultyWindow(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+    currencyBuilder.difficultyWindowV1(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+    currencyBuilder.difficultyWindowV2(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+  }
+
+  currencyBuilder.maxBlockSizeGrowthSpeedDenominator(365 * 24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+  currencyBuilder.lockedTxAllowedDeltaSeconds(CryptoNote::parameters::DIFFICULTY_TARGET * CryptoNote::parameters::CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS);
+
+  if (CryptoNote::parameters::UPGRADE_HEIGHT_V2 != 0)
+  {
+    currencyBuilder.upgradeHeightV2(CryptoNote::parameters::UPGRADE_HEIGHT_V2);
+  }
+
+  if (CryptoNote::parameters::UPGRADE_HEIGHT_V3 != 0)
+  {
+    currencyBuilder.upgradeHeightV3(CryptoNote::parameters::UPGRADE_HEIGHT_V3);
+  }
+
+  if (CryptoNote::parameters::KEY_IMAGE_CHECKING_BLOCK_INDEX != 0)
+  {
+    currencyBuilder.keyImageCheckingBlockIndex(CryptoNote::parameters::KEY_IMAGE_CHECKING_BLOCK_INDEX);
+  }
+
+  if (CryptoNote::parameters::DIFFICULTY_WINDOW != 0)
+  {
+    currencyBuilder.difficultyWindow(CryptoNote::parameters::DIFFICULTY_WINDOW);
+  }
+
+  currencyBuilder.difficultyLag(CryptoNote::parameters::DIFFICULTY_LAG);
+  currencyBuilder.difficultyCut(CryptoNote::parameters::DIFFICULTY_CUT);
+
+  if (CryptoNote::parameters::DIFFICULTY_WINDOW_V1 != 0)
+  {
+    currencyBuilder.difficultyWindowV1(CryptoNote::parameters::DIFFICULTY_WINDOW_V1);
+  }
+
+  if (CryptoNote::parameters::DIFFICULTY_WINDOW_V2 != 0)
+  {
+    currencyBuilder.difficultyWindowV2(CryptoNote::parameters::DIFFICULTY_WINDOW_V2);
+  }
+
+  currencyBuilder.difficultyLagV1(CryptoNote::parameters::DIFFICULTY_LAG_V1);
+  currencyBuilder.difficultyLagV2(CryptoNote::parameters::DIFFICULTY_LAG_V2);
+  currencyBuilder.difficultyCutV1(CryptoNote::parameters::DIFFICULTY_CUT_V1);
+  currencyBuilder.difficultyCutV2(CryptoNote::parameters::DIFFICULTY_CUT_V2);
+
+  CryptoNote::Currency currency = currencyBuilder.currency();
+
+  // if (targets.empty()) {
+  //   if (CryptoNote::parameters::GENESIS_BLOCK_REWARD > 0) {
+  //     std::cout << "Error: genesis block reward addresses are not defined" << std::endl;
+  //   } else {
+  //     CryptoNote::Transaction tx = currencyBuilder.generateGenesisTransaction();
+  //     std::string tx_hex = Common::toHex(CryptoNote::toBinaryArray(tx));
+  //     std::cout << "Add this line into your coin configuration file as is: " << std::endl;
+  //     std::cout << "GENESIS_COINBASE_TX_HEX=" << tx_hex << std::endl;
+  //   }
+  // } else {
+  //   CryptoNote::CurrencyBuilder  currencyBuilder(logManager);
+
+  //   currencyBuilder.genesisCoinbaseTxHex(CryptoNote::parameters::GENESIS_COINBASE_TX_HEX);
+  //   currencyBuilder.publicAddressBase58Prefix(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
+  //   currencyBuilder.moneySupply(CryptoNote::parameters::MONEY_SUPPLY);
+  //   currencyBuilder.emissionSpeedFactor(CryptoNote::parameters::EMISSION_SPEED_FACTOR);
+  //   currencyBuilder.blockGrantedFullRewardZone(CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
+  //   currencyBuilder.blockGrantedFullRewardZoneV1(CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1);
+  //   currencyBuilder.blockGrantedFullRewardZoneV2(CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2);
+  //   currencyBuilder.numberOfDecimalPlaces(CryptoNote::parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT);
+  //   currencyBuilder.mininumFee(CryptoNote::parameters::MINIMUM_FEE);
+  //   currencyBuilder.defaultDustThreshold(CryptoNote::parameters::DEFAULT_DUST_THRESHOLD);
+  //   currencyBuilder.difficultyTarget(CryptoNote::parameters::DIFFICULTY_TARGET);
+  //   currencyBuilder.minedMoneyUnlockWindow(CryptoNote::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW);
+  //   currencyBuilder.maxBlockSizeInitial(CryptoNote::parameters::MAX_BLOCK_SIZE_INITIAL);
+
+  //   if (CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY && CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY != 0)
+  //   {
+  //     currencyBuilder.difficultyWindow(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+  //     currencyBuilder.difficultyWindowV1(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+  //     currencyBuilder.difficultyWindowV2(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+  //     currencyBuilder.upgradeVotingWindow(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+  //     currencyBuilder.upgradeWindow(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+  //   } else {
+  //     currencyBuilder.difficultyWindow(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+  //     currencyBuilder.difficultyWindowV1(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+  //     currencyBuilder.difficultyWindowV2(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+  //   }
+
+  //   currencyBuilder.maxBlockSizeGrowthSpeedDenominator(365 * 24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+  //   currencyBuilder.lockedTxAllowedDeltaSeconds(CryptoNote::parameters::DIFFICULTY_TARGET * CryptoNote::parameters::CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS);
+
+  //   if (CryptoNote::parameters::UPGRADE_HEIGHT_V2 && CryptoNote::parameters::UPGRADE_HEIGHT_V2 != 0)
+  //   {
+  //     currencyBuilder.upgradeHeightV2(CryptoNote::parameters::UPGRADE_HEIGHT_V2);
+  //   }
+
+  //   if (CryptoNote::parameters::UPGRADE_HEIGHT_V3 && CryptoNote::parameters::UPGRADE_HEIGHT_V3 != 0)
+  //   {
+  //     currencyBuilder.upgradeHeightV3(CryptoNote::parameters::UPGRADE_HEIGHT_V3);
+  //   }
+
+  //   currencyBuilder.difficultyLag(CryptoNote::parameters::DIFFICULTY_LAG);
+  //   currencyBuilder.difficultyCut(CryptoNote::parameters::DIFFICULTY_CUT);
+
+  //   if (CryptoNote::parameters::DIFFICULTY_WINDOW_V1 && CryptoNote::parameters::DIFFICULTY_WINDOW_V1 != 0)
+  //   {
+  //     currencyBuilder.difficultyWindowV1(CryptoNote::parameters::DIFFICULTY_WINDOW_V1);
+  //   }
+
+  //   if (CryptoNote::parameters::DIFFICULTY_WINDOW_V2 && CryptoNote::parameters::DIFFICULTY_WINDOW_V2 != 0)
+  //   {
+  //     currencyBuilder.difficultyWindowV2(CryptoNote::parameters::DIFFICULTY_WINDOW_V2);
+  //   }
+
+  //   currencyBuilder.difficultyLagV1(CryptoNote::parameters::DIFFICULTY_LAG_V1);
+  //   currencyBuilder.difficultyLagV2(CryptoNote::parameters::DIFFICULTY_LAG_V2);
+  //   currencyBuilder.difficultyCutV1(CryptoNote::parameters::DIFFICULTY_CUT_V1);
+  //   currencyBuilder.difficultyCutV2(CryptoNote::parameters::DIFFICULTY_CUT_V2);
+  //   currencyBuilder.genesisBlockReward(CryptoNote::parameters::GENESIS_BLOCK_REWARD);
+
+  //   CryptoNote::Transaction tx = currencyBuilder.generateGenesisTransaction(targets);
+
+  //   currencyBuilder.cryptonoteName(CryptoNote::CRYPTONOTE_NAME);
+  //   std::string tx_hex = Common::toHex(CryptoNote::toBinaryArray(tx));
+  //   std::cout << "Modify this line into your coin configuration file as is: " << std::endl;
+  //   std::cout << "GENESIS_COINBASE_TX_HEX=" << tx_hex << std::endl;
+  // }
+
+  CryptoNote::Transaction tx = currencyBuilder.generateGenesisTransaction();
   CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
   std::string tx_hex = Common::toHex(txb);
 
@@ -216,6 +371,85 @@ int main(int argc, char* argv[])
 
     //create objects and link them
     CryptoNote::CurrencyBuilder currencyBuilder(logManager);
+
+    currencyBuilder.cryptonoteName(CryptoNote::CRYPTONOTE_NAME);
+    currencyBuilder.mandatoryTransaction(CryptoNote::parameters::MANDATORY_TRANSACTION);
+    currencyBuilder.genesisCoinbaseTxHex(CryptoNote::parameters::GENESIS_COINBASE_TX_HEX);
+    currencyBuilder.publicAddressBase58Prefix(CryptoNote::parameters::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX);
+    currencyBuilder.moneySupply(CryptoNote::parameters::MONEY_SUPPLY);
+    currencyBuilder.emissionSpeedFactor(CryptoNote::parameters::EMISSION_SPEED_FACTOR);
+    currencyBuilder.blockGrantedFullRewardZone(CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE);
+    currencyBuilder.blockGrantedFullRewardZoneV1(CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1);
+    currencyBuilder.blockGrantedFullRewardZoneV2(CryptoNote::parameters::CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2);
+    currencyBuilder.numberOfDecimalPlaces(CryptoNote::parameters::CRYPTONOTE_DISPLAY_DECIMAL_POINT);
+    currencyBuilder.mininumFee(CryptoNote::parameters::MINIMUM_FEE);
+    currencyBuilder.defaultDustThreshold(CryptoNote::parameters::DEFAULT_DUST_THRESHOLD);
+    currencyBuilder.difficultyTarget(CryptoNote::parameters::DIFFICULTY_TARGET);
+    currencyBuilder.minedMoneyUnlockWindow(CryptoNote::parameters::CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW);
+    currencyBuilder.maxBlockSizeInitial(CryptoNote::parameters::MAX_BLOCK_SIZE_INITIAL);
+
+    if (CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY != 0)
+    {
+      currencyBuilder.expectedNumberOfBlocksPerDay(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+      currencyBuilder.difficultyWindow(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+      currencyBuilder.difficultyWindowV1(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+      currencyBuilder.difficultyWindowV2(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+      currencyBuilder.upgradeVotingWindow(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+      currencyBuilder.upgradeWindow(CryptoNote::parameters::EXPECTED_NUMBER_OF_BLOCKS_PER_DAY);
+    } else {
+      currencyBuilder.expectedNumberOfBlocksPerDay(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+      currencyBuilder.difficultyWindow(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+      currencyBuilder.difficultyWindowV1(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+      currencyBuilder.difficultyWindowV2(24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+    }
+
+    currencyBuilder.maxBlockSizeGrowthSpeedDenominator(365 * 24 * 60 * 60 / CryptoNote::parameters::DIFFICULTY_TARGET);
+    currencyBuilder.lockedTxAllowedDeltaSeconds(CryptoNote::parameters::DIFFICULTY_TARGET * CryptoNote::parameters::CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_BLOCKS);
+
+    if (CryptoNote::parameters::UPGRADE_HEIGHT_V2 != 0)
+    {
+      currencyBuilder.upgradeHeightV2(CryptoNote::parameters::UPGRADE_HEIGHT_V2);
+    }
+
+    if (CryptoNote::parameters::UPGRADE_HEIGHT_V3 != 0)
+    {
+      currencyBuilder.upgradeHeightV3(CryptoNote::parameters::UPGRADE_HEIGHT_V3);
+    }
+
+    if (CryptoNote::parameters::KEY_IMAGE_CHECKING_BLOCK_INDEX != 0)
+    {
+      currencyBuilder.keyImageCheckingBlockIndex(CryptoNote::parameters::KEY_IMAGE_CHECKING_BLOCK_INDEX);
+    }
+
+    if (CryptoNote::parameters::DIFFICULTY_WINDOW != 0)
+    {
+      currencyBuilder.difficultyWindow(CryptoNote::parameters::DIFFICULTY_WINDOW);
+    }
+
+    currencyBuilder.difficultyLag(CryptoNote::parameters::DIFFICULTY_LAG);
+    currencyBuilder.difficultyCut(CryptoNote::parameters::DIFFICULTY_CUT);
+
+    if (CryptoNote::parameters::DIFFICULTY_WINDOW_V1 != 0)
+    {
+      currencyBuilder.difficultyWindowV1(CryptoNote::parameters::DIFFICULTY_WINDOW_V1);
+    }
+
+    if (CryptoNote::parameters::DIFFICULTY_WINDOW_V2 != 0)
+    {
+      currencyBuilder.difficultyWindowV2(CryptoNote::parameters::DIFFICULTY_WINDOW_V2);
+    }
+
+    currencyBuilder.difficultyLagV1(CryptoNote::parameters::DIFFICULTY_LAG_V1);
+    currencyBuilder.difficultyLagV2(CryptoNote::parameters::DIFFICULTY_LAG_V2);
+    currencyBuilder.difficultyCutV1(CryptoNote::parameters::DIFFICULTY_CUT_V1);
+    currencyBuilder.difficultyCutV2(CryptoNote::parameters::DIFFICULTY_CUT_V2);
+
+    currencyBuilder.killHeight(CryptoNote::parameters::KILL_HEIGHT);
+    currencyBuilder.tailEmissionReward(CryptoNote::parameters::TAIL_EMISSION_REWARD);
+    currencyBuilder.cryptonoteCoinVersion(CryptoNote::parameters::CRYPTONOTE_COIN_VERSION);
+    currencyBuilder.genesisBlockReward(CryptoNote::parameters::GENESIS_BLOCK_REWARD);
+    currencyBuilder.zawyDifficultyV2(CryptoNote::parameters::ZAWY_DIFFICULTY_V2);
+    // currencyBuilder.testnet(testnet_mode);
 
     try {
       currencyBuilder.currency();

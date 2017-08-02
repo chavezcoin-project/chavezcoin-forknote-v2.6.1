@@ -36,7 +36,7 @@ Configuration::Configuration() {
   logFile = "walletd.log";
   testnet = false;
   printAddresses = false;
-  syncFromZero = false;
+  syncFromZero = CryptoNote::parameters::SYNC_FROM_ZERO;
   logLevel = Logging::INFO;
   bindAddress = "";
   bindPort = 0;

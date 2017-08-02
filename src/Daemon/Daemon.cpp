@@ -76,29 +76,13 @@ namespace
 
 bool command_line_preprocessor(const boost::program_options::variables_map& vm, LoggerRef& logger);
 void print_genesis_tx_hex(const po::variables_map& vm, LoggerManager& logManager) {
-  std::vector<CryptoNote::AccountPublicAddress> targets;
-  auto genesis_block_reward_addresses = command_line::get_arg(vm, arg_genesis_block_reward_address);
 
-  CryptoNote::CurrencyBuilder currencyBuilder(logManager);
-  CryptoNote::Currency currency = currencyBuilder.currency();
+  CryptoNote::Transaction tx = CryptoNote::CurrencyBuilder(logManager).generateGenesisTransaction();
+  CryptoNote::BinaryArray txb = CryptoNote::toBinaryArray(tx);
+  std::string tx_hex = Common::toHex(txb);
 
-  for (const auto& address_string : genesis_block_reward_addresses) {
-     CryptoNote::AccountPublicAddress address;
-    if (!currency.parseAccountAddressString(address_string, address)) {
-      std::cout << "Failed to parse address: " << address_string << std::endl;
-      return;
-    }
-    targets.emplace_back(std::move(address));
-  }
-
-  if (CryptoNote::parameters::GENESIS_BLOCK_REWARD > 0) {
-    std::cout << "Error: genesis block reward addresses are not defined" << std::endl;
-  } else {
-    CryptoNote::Transaction tx = currencyBuilder.generateGenesisTransaction();
-    std::string tx_hex = Common::toHex(CryptoNote::toBinaryArray(tx));
-    std::cout << "Add this line into your coin configuration file as is: " << std::endl;
-    std::cout << "GENESIS_COINBASE_TX_HEX=" << tx_hex << std::endl;
-  }
+  std::cout << "Insert this line into your coin configuration file as is: " << std::endl;
+  std::cout << "const char GENESIS_COINBASE_TX_HEX[] = \"" << tx_hex << "\";" << std::endl;
 
   return;
 }
@@ -181,24 +165,14 @@ int main(int argc, char* argv[])
         config_path = data_dir_path / config_path;
       }
 
-      // boost::system::error_code ec;
-      // if (boost::filesystem::exists(config_path, ec)) {
-      //   std::cout << "Success: Configuration file openned: " << config_path << std::endl;
-      //   po::store(po::parse_config_file<char>(config_path.string<std::string>().c_str(), desc_cmd_sett, true), vm);
-      // }
-      // else
-      // {
-      //   std::cout << "Configuration error: Cannot open configuration file" << std::endl;
-      //   std::cout << "" << std::endl;
-      //   std::cout << "Usage:" << std::endl;
-      //   std::cout << "Windows:   forknoted.exe --config-file configs/dashcoin.conf" << std::endl;
-      //   std::cout << "Linux/Mac:   ./forknoted --config-file configs/dashcoin.conf" << std::endl;
-      //   return false;
-      // }
+      boost::system::error_code ec;
+      if (boost::filesystem::exists(config_path, ec)) {
+        po::store(po::parse_config_file<char>(config_path.string<std::string>().c_str(), desc_cmd_sett), vm);
+      }
 
       po::notify(vm);
-      if (command_line::get_arg(vm, command_line::arg_data_dir) == Tools::getDefaultDataDirectory() && command_line::has_arg(vm, arg_CRYPTONOTE_NAME) && !command_line::get_arg(vm, arg_CRYPTONOTE_NAME).empty()) {
-        boost::replace_all(data_dir, CryptoNote::CRYPTONOTE_NAME, command_line::get_arg(vm, arg_CRYPTONOTE_NAME));
+      if (command_line::get_arg(vm, command_line::arg_data_dir) == Tools::getDefaultDataDirectory()) {
+        boost::replace_all(data_dir, CryptoNote::CRYPTONOTE_NAME, CryptoNote::CRYPTONOTE_NAME);
       }
       data_dir_path = data_dir;
       if (command_line::get_arg(vm, arg_print_genesis_tx)) {
@@ -242,38 +216,20 @@ int main(int argc, char* argv[])
 
     //create objects and link them
     CryptoNote::CurrencyBuilder currencyBuilder(logManager);
-    currencyBuilder.testnet(testnet_mode);
+
     try {
       currencyBuilder.currency();
     } catch (std::exception&) {
       std::cout << "GENESIS_COINBASE_TX_HEX constant has an incorrect value. Please launch: " << CryptoNote::CRYPTONOTE_NAME << "d --" << arg_print_genesis_tx.name;
       return 1;
     }
+
     CryptoNote::Currency currency = currencyBuilder.currency();
 
     CryptoNote::Checkpoints checkpoints(logManager);
-    std::vector<CryptoNote::CheckpointData> checkpoint_input;
-    std::vector<std::string> checkpoint_args = command_line::get_arg(vm, arg_CHECKPOINT);
-    std::vector<std::string> checkpoint_blockIds;
 
-    if (command_line::has_arg(vm, arg_CHECKPOINT) && checkpoint_args.size() != 0)
-    {
-      for(const std::string& str: checkpoint_args) {
-        std::string::size_type p = str.find(':');
-        if(p != std::string::npos)
-        {
-          uint32_t checkpoint_height = std::stoull(str.substr(0, p));
-          checkpoint_blockIds.push_back(str.substr(p+1, str.size()));
-          checkpoint_input.push_back({ checkpoint_height, checkpoint_blockIds.back().c_str() });
-        }
-      }
-    }
-    else
-    {
-      if (command_line::get_arg(vm, arg_CRYPTONOTE_NAME) == "bytecoin") {
-          checkpoint_input = CryptoNote::CHECKPOINTS;
-      }
-    }
+    std::vector<CryptoNote::CheckpointData> checkpoint_input;
+    checkpoint_input = CryptoNote::CHECKPOINTS;
 
     if (!testnet_mode) {
       for (const auto& cp : checkpoint_input) {

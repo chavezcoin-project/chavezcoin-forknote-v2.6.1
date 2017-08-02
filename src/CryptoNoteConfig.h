@@ -102,7 +102,7 @@ namespace CryptoNote {
   const char     CRYPTONOTE_POOLDATA_FILENAME[]                = "poolstate.bin";
   const char     P2P_NET_DATA_FILENAME[]                       = "p2pstate.bin";
   const char     MINER_CONFIG_FILE_NAME[]                      = "miner_conf.json";
-  const char     GENESIS_COINBASE_TX_HEX[]                     = "";
+  const char     GENESIS_COINBASE_TX_HEX[]                     = "010a01ff0001f0e6fedd8d58029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210157ad05b4c3ad7adcd2a46acea01bbff85be0aa67eab39231828fd560bb74b9a0";
   } // parameters
 
   const char     CRYPTONOTE_NAME[]                             = "chavezcoin";
